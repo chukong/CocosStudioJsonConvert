@@ -2803,8 +2803,7 @@ void	JsonLoader::AddObjectDesc(string strName,const rapidjson::Value &	vValue)
 
 			unsigned int nSize = vValue.MemberonEnd() - vValue.MemberonBegin();
 			unsigned int nAttribSize = tIter->m_AttribVec.size();
-			if( nSize > nAttribSize )
-			{
+			
 				for (rapidjson::Value::ConstMemberIterator itr = vValue.MemberonBegin(); itr != vValue.MemberonEnd(); ++itr)
 				{
 					const char*	szAttribName  = itr->name.GetString();
@@ -2849,7 +2848,7 @@ void	JsonLoader::AddObjectDesc(string strName,const rapidjson::Value &	vValue)
 						}
 					}
 				}	
-			}
+		
 			return ;
 
 		}
