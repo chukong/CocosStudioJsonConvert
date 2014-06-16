@@ -169,78 +169,6 @@ bool	stJsonAttribDesc::CompareAttribDesc(string& strName,bool bFastCompare)
 	
 	return false;
 }
-//输出到二进制文件
-void	stJsonAttribDesc::WriteToFile(FILE* hFile)
-{
-	//Type
-	fwrite(&m_Type,sizeof(Type),1,hFile);
-
-	//Name
-	int  nLen = m_Name.size();
-	fwrite(&nLen,sizeof(int),1,hFile);
-	fwrite(m_Name.c_str(),sizeof(char),nLen,hFile);
-
-	//DefaultValue
-	nLen = m_DefaultValue.size();
-	fwrite(&nLen,sizeof(int),1,hFile);
-	fwrite(m_DefaultValue.c_str(),sizeof(char),nLen,hFile);
-}
-//输出到二进制文件
-void	stJsonAttribDesc::WriteToFile_NoString(FILE* hFile,uint64_t& vWritePosition,uint64_t& vWriteSize)
-{
-
-	stExpJsonAttribDesc	tAttribDesc;
-	tAttribDesc.m_Type = m_Type ;
-	tAttribDesc.m_szName = vWriteSize;
-	vWriteSize += m_Name.size()+1;
-	tAttribDesc.m_szDefaultValue = vWriteSize;
-	vWriteSize += m_DefaultValue.size()+1;
-
-	vWritePosition	+= sizeof(stExpJsonAttribDesc);
-
-	fwrite(&tAttribDesc,sizeof(stExpJsonAttribDesc),1,hFile);
-}
-//输出到二进制文件
-void	stJsonAttribDesc::WriteToFile_String(FILE* hFile)
-{
-	int nLen = m_Name.size()+1;
-	//Name
-	fwrite(m_Name.c_str(),sizeof(char),nLen,hFile);
-	//DefaultValue
-	nLen = m_DefaultValue.size()+1;
-	fwrite(m_DefaultValue.c_str(),sizeof(char),nLen,hFile);
-}
-//从二进制文件中读取
-char*	stJsonAttribDesc::ReadFromBuff(char* pBuff)
-{
-	//Type
-	char*	pTempBuff = pBuff;
-	memcpy(&m_Type,pTempBuff,sizeof(Type));
-	pTempBuff += sizeof(Type);
-
-	//Name
-	int  nLen = 0;
-	memcpy(&nLen,pTempBuff,sizeof(int));
-	pTempBuff += sizeof(int);
-
-	memcpy(g_Buff,pTempBuff,nLen);
-	pTempBuff += nLen;
-	g_Buff[nLen]='\0';
-
-	m_Name = g_Buff;
-
-	//DefaultValue
-	memcpy(&nLen,pTempBuff,sizeof(int));
-	pTempBuff += sizeof(int);
-
-	memcpy(g_Buff,pTempBuff,nLen);
-	pTempBuff += nLen;
-	g_Buff[nLen]='\0';
-
-	m_DefaultValue = g_Buff;
-
-	return pTempBuff ;
-}	
 
 //取得结构所占用的大小
 int		stJsonAttribDesc::GetSize()
@@ -257,7 +185,7 @@ int		stJsonAttribDesc::GetSize()
 }
 
 //查找类型描述
-int		stJsonObjectDesc::FindAttribDesc(string& strName)
+int		stJsonObjectDesc::FindAttribDesc(string& strName,int& nNameIndex)
 {
 	vector<stJsonAttribDesc>::iterator tIter;
 
@@ -280,6 +208,7 @@ int		stJsonObjectDesc::FindAttribDesc(string& strName)
 	}
 	delete[] szMemory2;
 
+	nNameIndex = 0;
 	vector<string>::iterator tStrIter;
 	for(tStrIter = m_strVec2.begin();tStrIter != m_strVec2.end(); tStrIter++)
 	{
@@ -291,94 +220,9 @@ int		stJsonObjectDesc::FindAttribDesc(string& strName)
 				return (tIter - m_AttribVec.begin());
 			}
 		}
-
+		nNameIndex++;
 	}
 	return -1;
-}
-//输出到二进制文件
-void	stJsonObjectDesc::WriteToFile(FILE* hFile)
-{
-	//Name
-	int  nLen = m_Name.size();
-	fwrite(&nLen,sizeof(int),1,hFile);
-	fwrite(m_Name.c_str(),sizeof(char),nLen,hFile);
-	//保存所有属性
-	int nAttribNum = m_AttribVec.size();
-	fwrite(&nAttribNum,sizeof(int),1,hFile);
-
-	for(int i = 0 ; i < nAttribNum ; i++)
-	{
-		m_AttribVec[i].WriteToFile(hFile);
-	}
-}
-//输出到二进制文件
-void	stJsonObjectDesc::WriteToFile_Desc(FILE* hFile,uint64_t& vDescWritePosition,uint64_t& vAttribWritePosition,uint64_t& vWriteSize)
-{
-
-	stExpJsonObjectDesc	tObjectDesc;
-	tObjectDesc.m_szName = vWriteSize ;
-	tObjectDesc.m_nAttribNum = m_AttribVec.size();
-	tObjectDesc.m_pAttribDescArray = vAttribWritePosition;
-
-	vWriteSize			+= m_Name.size()+1;
-	vDescWritePosition	+= sizeof(stExpJsonObjectDesc);
-	vAttribWritePosition+= tObjectDesc.m_nAttribNum * sizeof(stExpJsonAttribDesc);
-
-	fwrite(&tObjectDesc,sizeof(stExpJsonObjectDesc),1,hFile);
-}
-//输出到二进制文件
-void	stJsonObjectDesc::WriteToFile_Attrib(FILE* hFile,uint64_t& vDescWritePosition,uint64_t& vWriteSize)
-{
-	int nAttribNum = m_AttribVec.size();
-	for(int i = 0 ; i < nAttribNum ; i++)
-	{
-		m_AttribVec[i].WriteToFile_NoString(hFile,vDescWritePosition,vWriteSize);
-	}
-}
-//输出到二进制文件
-void	stJsonObjectDesc::WriteToFile_String(FILE* hFile)
-{
-	int nLen = m_Name.size()+1;
-	//Name
-	fwrite(m_Name.c_str(),sizeof(char),nLen,hFile);
-}
-//输出到二进制文件
-void	stJsonObjectDesc::WriteToFile_AttribString(FILE* hFile)
-{
-	//保存所有属性
-	int nAttribNum = m_AttribVec.size();
-	for(int i = 0 ; i < nAttribNum ; i++)
-	{
-		m_AttribVec[i].WriteToFile_String(hFile);
-	}
-}
-//从二进制文件中读取
-char*	stJsonObjectDesc::ReadFromBuff(char* pBuff)
-{
-
-	char*	pTempBuff = pBuff;
-	//Name
-	int  nLen = 0;
-	memcpy(&nLen,pTempBuff,sizeof(int));
-	pTempBuff += sizeof(int);
-
-	memcpy(g_Buff,pTempBuff,nLen);
-	pTempBuff += nLen;
-	g_Buff[nLen]='\0';
-
-	m_Name = g_Buff;
-
-	int nAttribNum = 0;
-	memcpy(&nAttribNum,pTempBuff,sizeof(int));
-	pTempBuff += sizeof(int);
-	for(int i = 0 ; i < nAttribNum ; i++)
-	{
-		stJsonAttribDesc	tAttribDesc;
-		pTempBuff = tAttribDesc.ReadFromBuff(pTempBuff);
-		m_AttribVec.push_back(tAttribDesc);
-	}	
-
-	return pTempBuff;
 }
 
 //构造
@@ -771,7 +615,8 @@ stJsonNode	stJsonNode::GetGoodJsonNode(JsonLoader*		pJson,bool bIsRoot,const cha
 			for(tIter = m_ChildVec.begin(); tIter != m_ChildVec.end(); tIter++)
 			{
 
-				int	nIndex = vObjectDesc.FindAttribDesc(tIter->m_Name);
+				int nNameIndex = 0;
+				int	nIndex = vObjectDesc.FindAttribDesc(tIter->m_Name,nNameIndex);
 				if(nIndex >= 0)
 				{
 
@@ -810,6 +655,16 @@ stJsonNode	stJsonNode::GetGoodJsonNode(JsonLoader*		pJson,bool bIsRoot,const cha
 						tNewChildJsonNode.m_Type  = tIter->m_Type;
 						tNewChildJsonNode.m_Name  = tIter->m_Name;
 						tNewChildJsonNode.m_Value = tIter->m_Value;
+
+					
+						if(0 == strcmp(tIter->m_Name.c_str(),"__type"))
+						{
+							if(1 < vObjectDesc.m_NameVec.size())
+							{
+								tNewChildJsonNode.m_Value  = vObjectDesc.m_NameVec[nNameIndex];
+							}
+						}
+
 						tNewChildJsonNode.m_ObjIndex = tNewJsonNode.m_ObjIndex;
 						tNewChildJsonNode.m_AttribIndex = nIndex;
 						tNewJsonNode.m_ChildVec.push_back(tNewChildJsonNode);
@@ -951,7 +806,8 @@ stJsonNode	stJsonNode::GetGoodJsonNode(JsonLoader*		pJson,bool bIsRoot,const cha
 		for(tIter = m_ChildVec.begin(); tIter != m_ChildVec.end(); tIter++)
 		{
 
-			int	nIndex = vObjectDesc.FindAttribDesc(tIter->m_Name);
+			int nNameIndex = 0;
+			int	nIndex = vObjectDesc.FindAttribDesc(tIter->m_Name,nNameIndex);
 			if(nIndex >= 0)
 			{			
 				bool bComType = (tIter->m_Type == vObjectDesc.m_AttribVec[nIndex].m_Type)?true:false;
@@ -986,7 +842,25 @@ stJsonNode	stJsonNode::GetGoodJsonNode(JsonLoader*		pJson,bool bIsRoot,const cha
 					stJsonNode	tNewChildJsonNode;
 					tNewChildJsonNode.m_Type  = tIter->m_Type;
 					tNewChildJsonNode.m_Name  = tIter->m_Name;
-					tNewChildJsonNode.m_Value = tIter->m_Value;
+
+					if(0 == strcmp(tIter->m_Name.c_str(),"version"))
+					{
+						tNewChildJsonNode.m_Value = pJson->GetVersion();
+					}
+					else
+					{
+						tNewChildJsonNode.m_Value = tIter->m_Value;
+					}
+
+
+					if(0 == strcmp(tIter->m_Name.c_str(),"__type"))
+					{
+						if(1 < vObjectDesc.m_NameVec.size())
+						{
+							tNewChildJsonNode.m_Value  = vObjectDesc.m_NameVec[nNameIndex];
+						}
+					}
+
 					tNewChildJsonNode.m_ObjIndex = 0;
 					tNewChildJsonNode.m_AttribIndex = nIndex;
 					tNewJsonNode.m_ChildVec.push_back(tNewChildJsonNode);
@@ -1083,351 +957,7 @@ int		stJsonNode::FindChild(const char* szName)
 	}
 	return -1;
 }
-//输出到二进制文件
-void	stJsonNode::WriteToFile(JsonLoader*		pJson,FILE* hFile,bool bIsRoot)
-{
-	if( m_Type == kObjectType || bIsRoot)
-	{
-		//Obj Index
-		int    n_UsedObjectIndex  = pJson->GetUsedObjectDescIndex(m_ObjIndex);
-		fwrite(&n_UsedObjectIndex,sizeof(int),1,hFile);
 
-		if(n_UsedObjectIndex >= 0)
-		{
-			int nAttribNum = m_ChildVec.size();
-			fwrite(&nAttribNum,sizeof(int),1,hFile);
-			vector<stJsonNode>::iterator tIter;
-			for(tIter = m_ChildVec.begin(); tIter != m_ChildVec.end(); tIter++)
-			{
-				tIter->WriteToFile(pJson,hFile,false);
-			}
-		}
-
-	}
-	else if( m_Type == kArrayType )
-	{
-		int nChildNum = m_ChildVec.size();
-		fwrite(&nChildNum,sizeof(int),1,hFile);
-		if(false == m_ChildVec.empty())
-		{
-
-			int  nLen = m_Name.size();
-			fwrite(&nLen,sizeof(int),1,hFile);
-			fwrite(m_Name.c_str(),sizeof(char),nLen,hFile);
-
-			//将类型存储一下
-			fwrite(&m_ChildVec.front().m_Type,sizeof(Type),1,hFile);
-
-			vector<stJsonNode>::iterator tIter;
-			for(tIter = m_ChildVec.begin(); tIter != m_ChildVec.end(); tIter++)
-			{
-				tIter->WriteToFile(pJson,hFile,false);
-			}
-		}
-
-	}
-	else 
-	{
-		if(m_Type == kNullType)return ;
-		//if(m_Type == kFalseType)return ;
-		//if(m_Type == kTrueType)return ;
-
-		int  nLen = m_Value.size();
-		fwrite(&nLen,sizeof(int),1,hFile);
-		fwrite(m_Value.c_str(),sizeof(char),nLen,hFile);
-	}
-}
-
-//输出到二进制文件
-void	stJsonNode::WriteToFile_NoString(JsonLoader*		pJson,uint64_t& vStringSize,FILE* hFile)
-{
-	
-	stExpJsonNode	tWriteNode;
-	tWriteNode.m_ObjIndex = m_ObjIndex ;
-	tWriteNode.m_AttribIndex = m_AttribIndex ;
-	tWriteNode.m_szValue = vStringSize ;
-	vStringSize += m_Value.size()+1;
-	tWriteNode.m_ChildNum = m_ChildVec.size();
-	tWriteNode.m_ChildArray = m_lChildMemAddr;
-
-	fwrite(&tWriteNode,sizeof(stExpJsonNode),1,hFile);
-
-}
-//输出到二进制文件
-void	stJsonNode::WriteChildToFile_NoString(JsonLoader*		pJson,uint64_t& vStringSize,FILE* hFile)
-{
-	vector<stJsonNode>::iterator tIter;
-	for(tIter = m_ChildVec.begin(); tIter != m_ChildVec.end(); tIter++)
-	{
-		tIter->WriteToFile_NoString(pJson,vStringSize,hFile);
-	}
-}
-//输出到二进制文件
-void	stJsonNode::WriteToFile_String(JsonLoader*		pJson,FILE* hFile)
-{
-	
-	if(m_ObjIndex >= 0)
-	{
-		if(m_AttribIndex >= 0)
-		{
-			int  nLen = m_Value.size()+1;
-			fwrite(m_Value.c_str(),sizeof(char),nLen,hFile);
-		}
-		else
-		{
-			stJsonObjectDesc	tObjectDesc = pJson->GetObjectDesc(m_ObjIndex);
-			if(0 == strcmp(m_Name.c_str(),tObjectDesc.m_Name.c_str()))
-			{
-				int  nLen = m_Value.size()+1;
-				fwrite(m_Value.c_str(),sizeof(char),nLen,hFile);
-			}
-			else
-			{
-				int  nLen = m_Name.size()+1;
-				fwrite(m_Name.c_str(),sizeof(char),nLen,hFile);
-			}
-		}
-	}
-	else
-	{
-
-		if(m_AttribIndex >= 0)
-		{
-			//如果是普通数组元素，用子结点数组地址表示名称
-			int  nLen = m_Name.size()+1;
-			fwrite(m_Name.c_str(),sizeof(char),nLen,hFile);
-			nLen = m_Value.size()+1;
-			fwrite(m_Value.c_str(),sizeof(char),nLen,hFile);
-		}
-		else
-		{
-			//如果是数组，存储名称
-			int  nLen = m_Name.size()+1;
-			fwrite(m_Name.c_str(),sizeof(char),nLen,hFile);
-		}
-
-	}
-
-}
-//输出到二进制文件
-void	stJsonNode::WriteChildToFile_String(JsonLoader*		pJson,FILE* hFile)
-{
-	vector<stJsonNode>::iterator tIter;
-	for(tIter = m_ChildVec.begin(); tIter != m_ChildVec.end(); tIter++)
-	{
-		tIter->WriteToFile_String(pJson,hFile);
-	}
-}
-//从二进制文件中读取
-char*	stJsonNode::ReadFromBuff(JsonLoader*		pJson,char* pBuff,bool bIsArray,stJsonObjectDesc* pJsonObjDesc,int vAttribIndex)
-{
-	char*	pTempBuff = pBuff;
-	if( vAttribIndex == -1 )
-	{
-		if(bIsArray)
-		{
-			int nObjNum = 0;
-			memcpy(&nObjNum,pTempBuff,sizeof(int));
-			pTempBuff += sizeof(int);
-
-			if( nObjNum > 0 )
-			{
-				int  nLen = 0;
-				memcpy(&nLen,pTempBuff,sizeof(int));
-				pTempBuff += sizeof(int);
-
-				memcpy(g_Buff,pTempBuff,nLen);
-				pTempBuff += nLen;
-				g_Buff[nLen]='\0';
-
-				m_Name = g_Buff;
-
-				Type	tType;
-				memcpy(&tType,pTempBuff,sizeof(Type));
-				pTempBuff += sizeof(Type);
-
-				for(int i = 0 ; i < nObjNum ; i++)
-				{
-					stJsonNode	tAttrib;
-					pTempBuff = tAttrib.ReadFromBuff(pJson,pTempBuff,true,NULL,i);
-					tAttrib.m_Type = tType;
-					m_ChildVec.push_back(tAttrib);
-				}	
-			}
-
-		}
-		else
-		{
-			//Obj Index
-			memcpy(&m_ObjIndex,pTempBuff,sizeof(int));
-			pTempBuff += sizeof(int);
-
-
-			if( m_ObjIndex >= 0 )
-			{
-				stJsonObjectDesc&	tJsonObjDesc = pJson->GetObjectDesc(m_ObjIndex);
-
-				int nAttribNum = 0;
-				memcpy(&nAttribNum,pTempBuff,sizeof(int));
-				pTempBuff += sizeof(int);
-
-				for(int i = 0 ; i < nAttribNum ; i++)
-				{
-					stJsonNode	tAttrib;
-					pTempBuff = tAttrib.ReadFromBuff(pJson,pTempBuff,false,&tJsonObjDesc,i);
-					m_ChildVec.push_back(tAttrib);
-				}	
-			}
-
-		}
-	}
-	else
-	{
-		if(bIsArray)
-		{
-			int  nLen = 0;
-			memcpy(&nLen,pTempBuff,sizeof(int));
-			pTempBuff += sizeof(int);
-
-			memcpy(g_Buff,pTempBuff,nLen);
-			pTempBuff += nLen;
-			g_Buff[nLen]='\0';
-
-			m_Value = g_Buff;
-		}
-		else if(pJsonObjDesc)
-		{
-			m_Type = pJsonObjDesc->m_AttribVec[vAttribIndex].m_Type ;
-			m_Name = pJsonObjDesc->m_AttribVec[vAttribIndex].m_Name ;
-
-			if( m_Type == kArrayType )
-			{
-
-				int nObjNum = 0;
-				memcpy(&nObjNum,pTempBuff,sizeof(int));
-				pTempBuff += sizeof(int);
-
-				if( nObjNum > 0)
-				{
-					int  nLen = 0;
-					memcpy(&nLen,pTempBuff,sizeof(int));
-					pTempBuff += sizeof(int);
-
-					memcpy(g_Buff,pTempBuff,nLen);
-					pTempBuff += nLen;
-					g_Buff[nLen]='\0';
-
-					m_Name = g_Buff;
-
-					Type	tType;	
-					memcpy(&tType,pTempBuff,sizeof(Type));
-					pTempBuff += sizeof(Type);
-
-					if(kObjectType == tType)
-					{
-						for(int i = 0 ; i < nObjNum ; i++)
-						{
-							stJsonNode	tAttrib;
-							pTempBuff = tAttrib.ReadFromBuff(pJson,pTempBuff,false,NULL,-1);
-							tAttrib.m_Type = tType;
-							m_ChildVec.push_back(tAttrib);
-						}	
-					}
-					else if(kArrayType == tType)
-					{
-						for(int i = 0 ; i < nObjNum ; i++)
-						{
-							stJsonNode	tAttrib;
-							pTempBuff = tAttrib.ReadFromBuff(pJson,pTempBuff,true,NULL,-1);
-							tAttrib.m_Type = tType;
-							m_ChildVec.push_back(tAttrib);
-						}	
-					}
-					else 
-					{
-						for(int i = 0 ; i < nObjNum ; i++)
-						{
-							stJsonNode	tAttrib;
-							pTempBuff = tAttrib.ReadFromBuff(pJson,pTempBuff,true,NULL,i);
-							tAttrib.m_Type = tType;
-							m_ChildVec.push_back(tAttrib);
-						}	
-					}
-
-				}
-
-			}
-			else if( m_Type == kObjectType )
-			{
-				memcpy(&m_ObjIndex,pTempBuff,sizeof(int));
-				pTempBuff += sizeof(int);
-
-
-				if( m_ObjIndex >= 0 )
-				{
-					stJsonObjectDesc&	tJsonObjDesc = pJson->GetObjectDesc(m_ObjIndex);
-
-					int nAttribNum = 0;
-					memcpy(&nAttribNum,pTempBuff,sizeof(int));
-					pTempBuff += sizeof(int);
-
-					for(int i = 0 ; i < nAttribNum ; i++)
-					{
-						stJsonNode	tAttrib;
-						pTempBuff = tAttrib.ReadFromBuff(pJson,pTempBuff,false,&tJsonObjDesc,i);
-						m_ChildVec.push_back(tAttrib);
-					}	
-				}
-
-			}
-			else
-			{
-
-				if(m_Type == kNullType)
-				{
-					return pTempBuff;
-				}
-				/*
-				if(m_Type == kFalseType)
-				{
-					return pTempBuff;
-				}
-				if(m_Type == kTrueType)
-				{
-					return pTempBuff;
-				}
-				*/
-
-				int  nLen = 0;
-				memcpy(&nLen,pTempBuff,sizeof(int));
-				pTempBuff += sizeof(int);
-
-				memcpy(g_Buff,pTempBuff,nLen);
-				pTempBuff += nLen;
-				g_Buff[nLen]='\0';
-
-				m_Value = g_Buff;
-
-				if(m_Type == kFalseType)
-				{
-					if(0 == strcmp(g_Buff,"1"))
-					{
-						m_Type = kTrueType	;
-					}
-				}
-				else if(m_Type == kTrueType)
-				{
-					if(0 == strcmp(g_Buff,"0"))
-					{
-						m_Type = kFalseType;	
-					}
-				}
-			}
-		}
-	}
-
-	return pTempBuff;
-}
 //取得所有的子结点，孙节点
 int		stJsonNode::GetAllJsonNodes(vector<stJsonNode*>&  vAllChildVec)
 {
@@ -1453,767 +983,11 @@ int		stJsonNode::GetAllJsonNodes(vector<stJsonNode*>&  vAllChildVec)
 
 	return nChildCount;
 }
-//取类型
-Type	stExpJsonNode::GetType(JsonLoader*		pJson)
-{
-	Type	tType = kObjectType;
-	if(m_ObjIndex >= 0)
-	{
-		stExpJsonObjectDesc*	tpJsonObjectDesc = pJson->GetJsonObjectDesc_Fast();
-		if( m_AttribIndex >= 0 )
-		{
-			stExpJsonAttribDesc* tpAttribDescArray = (stExpJsonAttribDesc*) tpJsonObjectDesc[m_ObjIndex].m_pAttribDescArray;
-			tType = tpAttribDescArray[m_AttribIndex].m_Type;
 
-			if(kFalseType == tType || kTrueType == tType)
-			{
-				char* szValue = (char*)m_szValue;
-				if(szValue[0] == '0')
-				{
-					return kFalseType;
-				}
-				else
-				{
-					return kTrueType;
-				}
-			}
-
-		}
-		else
-		{
-			tType = kObjectType;
-		}
-	}
-	else
-	{
-		if(m_AttribIndex >= 0)
-		{
-			tType   = (Type)m_ChildNum;
-
-			if(kFalseType == tType || kTrueType == tType)
-			{
-				char* szValue = (char*)m_szValue;
-				if(szValue[0] == '0')
-				{
-					return kFalseType;
-				}
-				else
-				{
-					return kTrueType;
-				}
-			}
-		}
-		else
-		{
-			tType = kArrayType;
-		}
-	}
-	return tType;
-}
-//取名称
-char*	stExpJsonNode::GetName(JsonLoader*		pJson)
-{
-	char*   szName  = NULL ;
-	if(m_ObjIndex >= 0)
-	{
-		stExpJsonObjectDesc*	tpJsonObjectDesc = pJson->GetJsonObjectDesc_Fast();
-		if( m_AttribIndex >= 0 )
-		{
-			stExpJsonAttribDesc* tpAttribDescArray = (stExpJsonAttribDesc*) tpJsonObjectDesc[m_ObjIndex].m_pAttribDescArray;
-			szName = (char*)tpAttribDescArray[m_AttribIndex].m_szName;
-		}
-		else
-		{
-			//如果名字与类名称不同，则按真实值设置
-			char* szValue = (char*)m_szValue;
-			if(szValue[0])
-			{
-				//数组
-				szName = (char*)m_szValue;
-			}
-			else
-			{
-				//结构
-				szName = (char*)tpJsonObjectDesc[m_ObjIndex].m_szName;
-			}
-		}
-	}
-	else
-	{
-		if(m_AttribIndex >= 0)
-		{
-			char*   pStringAddr = (char*)pJson->GetJsonObjectDesc_Fast() + pJson->GetFileHeader_Fast()->m_lStringMemAddr ;
-			szName  = m_ChildArray + pStringAddr;	
-		}
-		else
-		{
-			szName = (char*)m_szValue;
-		}
-	}
-	return szName ;
-}
-//取值
-char*	stExpJsonNode::GetValue()
-{
-	return (char*)m_szValue;
-}
-//取得子结点数量
-int		stExpJsonNode::GetChildNum()
-{
-	return m_ChildNum;
-}
-//取得子结点数组
-stExpJsonNode*		stExpJsonNode::GetChildArray()
-{
-	return (stExpJsonNode*)m_ChildArray;
-}
-//重建
-void	stExpJsonNode::ReBuild(char* pJsonNodeAddr,char* pStringMemoryAddr)
-{
-	m_szValue = m_szValue + (uint64_t)pStringMemoryAddr;
-	//如果是物体或数组，分组子结点
-	if( -1 == m_AttribIndex )
-	{
-		if(m_ChildNum > 0)
-		{
-			m_ChildArray = m_ChildArray + (uint64_t)pJsonNodeAddr;
-
-			stExpJsonNode* tpChildArray = (stExpJsonNode*)m_ChildArray;
-			for(int i = 0 ; i < m_ChildNum ; i++)
-			{
-				tpChildArray[i].ReBuild(pJsonNodeAddr,pStringMemoryAddr);
-			}
-		}
-	}
-
-}
-//打印
-void	stExpJsonNode::Print(JsonLoader*		pJson,void*	pFileName,int vLayer,bool bEndNode,bool bParentNodeIsArray)
-{
-	FILE*	pFile = NULL;
-	if(pFileName)
-	{
-		if(vLayer == 0)
-		{
-			pFile = fopen((const char*)pFileName,"wt");
-			if(!pFile)return ;
-
-		}
-		else
-		{
-			pFile = (FILE*)pFileName;
-		}
-	}
-
-
-	if(pFile)
-	{
-		for(int i = 0 ; i < vLayer ; i++)
-		{
-			fprintf(pFile," ");
-		}
-	}
-	else
-	{	
-		for(int i = 0 ; i < vLayer ; i++)
-		{
-			printf(" ");
-		}
-
-	}
-
-	bool bThieNodeIsArray = false;
-
-	Type	tType = kObjectType;
-	char*   szName  = NULL ;
-	char*   szValue = NULL;
-	if(m_ObjIndex >= 0)
-	{
-		szValue = (char*)m_szValue;
-		stExpJsonObjectDesc*	tpJsonObjectDesc = pJson->GetJsonObjectDesc_Fast();
-		if( m_AttribIndex >= 0 )
-		{
-			stExpJsonAttribDesc*	tpAttribDescArray = (stExpJsonAttribDesc*)tpJsonObjectDesc[m_ObjIndex].m_pAttribDescArray;
-			tType = tpAttribDescArray[m_AttribIndex].m_Type;
-			szName = (char*)tpAttribDescArray[m_AttribIndex].m_szName;
-
-			//如果是Ojbect但无子元素，设为NULL
-			if( m_ChildNum == 0 && tType == kObjectType)
-			{
-				tType = kNullType;
-			}
-
-		}
-		else
-		{
-			
-
-			tType = kObjectType;
-			//如果名字与类名称不同，则按真实值设置
-			char* szValue = (char*)m_szValue;
-			if(szValue[0])
-			{
-				//数组
-				szName = (char*)m_szValue;
-			}
-			else
-			{
-				//结构
-				szName = (char*)tpJsonObjectDesc[m_ObjIndex].m_szName;
-			}
-		}
-	}
-	else
-	{
-		if(m_AttribIndex >= 0)
-		{
-			char*   pStringAddr = (char*)pJson->GetJsonObjectDesc_Fast() + pJson->GetFileHeader_Fast()->m_lStringMemAddr ;
-			tType   = (Type)m_ChildNum;
-			szName  = m_ChildArray + pStringAddr;	
-			szValue = (char*)m_szValue;
-		}
-		else
-		{
-
-			tType = kArrayType;
-			szName = (char*)m_szValue;
-			szValue = (char*)m_szValue;
-		}
-	}
-
-
-	switch(tType)
-	{
-	case kNullType:
-		{
-
-			if(szName && strlen(szName) > 0)
-			{
-				if(pFile)
-				{
-					if(bEndNode)
-					{
-						fprintf(pFile,"\"%s\":null\n",szName);
-					}
-					else
-					{
-						fprintf(pFile,"\"%s\":null,\n",szName);
-					}
-				}
-				else
-				{
-					printf("%s:null\n",szName);
-				}
-
-			}
-		}
-		break;
-	case kFalseType:
-	case kTrueType:
-		{
-			if(szValue[0] == '0')
-			{
-				if(szName && strlen(szName) > 0)
-				{
-					if(pFile)
-					{
-						if(bEndNode)
-						{
-							fprintf(pFile,"\"%s\":false\n",szName);
-						}
-						else
-						{
-							fprintf(pFile,"\"%s\":false,\n",szName);
-						}
-
-					}
-					else
-					{
-						printf("%s:false\n",szName);
-					}
-				}
-			}
-			else
-			{
-				if(szName && strlen(szName) > 0)
-				{
-					if(pFile)
-					{
-						if(bEndNode)
-						{
-							fprintf(pFile,"\"%s\":true\n",szName);
-						}
-						else
-						{
-							fprintf(pFile,"\"%s\":true,\n",szName);
-						}
-
-					}
-					else
-					{
-						printf("%s:true\n",szName);
-					}
-				}
-			}
-
-		}
-		break;
-	case kObjectType:
-		{
-			
-			if(pFile)
-			{
-				if((szName && strlen(szName) > 0)&& false == bParentNodeIsArray)
-				{
-					fprintf(pFile,"\"%s\" : { \n",szName);
-				}
-				else
-				{
-					if( vLayer > 0 )
-					{
-						for(int i = 0 ; i < vLayer+2; i++)
-						{
-							fprintf(pFile," ");
-						}
-					}
-
-					fprintf(pFile,"{\n");
-				}
-
-			}
-			else
-			{
-
-				if(szName && strlen(szName) > 0)
-				{
-					printf("%s: {\n",szName);
-				}
-				else
-				{
-					if( vLayer > 0 )
-					{
-						for(int i = 0 ; i < vLayer+2; i++)
-						{
-							fprintf(pFile," ");
-						}
-					}
-					printf("{\n");
-				}
-
-			}
-		}
-		break;
-	case kArrayType:
-		{
-			if(pFile)
-			{
-				if(szName && strlen(szName) > 0)
-				{
-					if(m_ChildNum > 0)
-					{
-						fprintf(pFile,"\"%s\": [\n",szName);
-					}
-					else
-					{
-						fprintf(pFile,"\"%s\": [",szName);
-					}
-
-				}
-			}
-			else
-			{
-				if(szName && strlen(szName) > 0)
-				{
-					printf("%s: [\n",szName);
-				}
-			}
-
-			bThieNodeIsArray = true;
-		}
-		break;
-	case kStringType:
-		{
-			if(pFile)
-			{
-				if(szName && strlen(szName) > 0)
-				{
-					if(bEndNode)
-					{
-						fprintf(pFile,"\"%s\":\"%s\"\n",szName,szValue);
-					}
-					else
-					{
-						fprintf(pFile,"\"%s\":\"%s\",\n",szName,szValue);
-					}
-				}
-				else
-				{
-					if(bEndNode)
-					{
-						fprintf(pFile,"\"%s\"\n",szValue);
-					}
-					else
-					{
-						fprintf(pFile,"\"%s\",\n",szValue);
-					}
-				}
-			}
-			else
-			{
-				if(szName && strlen(szName) > 0)
-				{
-					printf("%s:String:%s\n",szName,szValue);
-				}
-				else
-				{
-					printf("String:%s\n",szValue);
-				}
-			}
-
-		}
-		break;
-	case kNumberType:
-		{
-			if(pFile)
-			{
-				if(szName && strlen(szName) > 0)
-				{
-					if(bEndNode)
-					{
-						fprintf(pFile,"\"%s\":%s\n",szName,szValue);
-					}
-					else
-					{
-						fprintf(pFile,"\"%s\":%s,\n",szName,szValue);
-					}
-				}
-				else
-				{
-					if(bEndNode)
-					{
-						fprintf(pFile,"%s\n",szValue);
-					}
-					else
-					{
-						fprintf(pFile,"%s,\n",szValue);
-					}
-				}
-
-			}
-			else
-			{
-				if(szName && strlen(szName) > 0)
-				{
-					printf("%s:Number:%s\n",szName,szValue);
-				}
-				else
-				{
-					printf("Number:%s\n",szValue);
-				}
-			}
-
-		}
-		break;
-	}
-
-	if( kObjectType == tType || kArrayType == tType)
-	{
-		stExpJsonNode* tpChildArray = (stExpJsonNode*)m_ChildArray;
-
-		for(int i = 0 ; i < m_ChildNum ; i++)
-		{
-			if(i == m_ChildNum-1)
-			{
-				tpChildArray[i].Print(pJson,pFile,vLayer+1,true,bThieNodeIsArray);
-			}
-			else
-			{
-				tpChildArray[i].Print(pJson,pFile,vLayer+1,false,bThieNodeIsArray);
-			}
-
-		}
-	}
-
-	switch(tType)
-	{
-	case kObjectType:
-		{
-			if(pFile)
-			{
-				if( vLayer > 0 )
-				{
-					for(int i = 0 ; i < vLayer+2; i++)
-					{
-						fprintf(pFile," ");
-					}
-				}
-				if(bEndNode||0==vLayer)
-				{
-					fprintf(pFile,"}\n");
-				}
-				else
-				{
-					fprintf(pFile,"},\n");
-				}
-
-			}
-			else
-			{
-				if( vLayer > 0 )
-				{
-					for(int i = 0 ; i < vLayer+2; i++)
-					{
-						fprintf(pFile," ");
-					}
-				}
-				printf("}\n");
-			}
-
-		}
-		break;
-	case kArrayType:
-		{
-			if(pFile)
-			{
-				if( vLayer > 0 && m_ChildNum > 0)
-				{
-					for(int i = 0 ; i < vLayer+2; i++)
-					{
-						fprintf(pFile," ");
-					}
-				}
-
-				if(bEndNode||0==vLayer)
-				{
-					fprintf(pFile,"]\n");
-				}
-				else
-				{
-					fprintf(pFile,"],\n");
-				}
-
-			}
-			else
-			{
-				if( vLayer > 0  && m_ChildNum > 0)
-				{
-					for(int i = 0 ; i < vLayer+2; i++)
-					{
-						fprintf(pFile," ");
-					}
-				}
-				printf("]\n");
-			}
-
-		}
-		break;
-	}
-
-	if(vLayer == 0&&pFile)
-	{
-		fclose(pFile);
-/*
-		char szFileName[_MAX_PATH];
-		sprintf(szFileName,"%s.utf8",pFileName);
-		if(true == ConvAsciiTxtToUTF8((const char*)pFileName,szFileName))
-		{
-			DeleteFile((const char*)pFileName);
-			rename(szFileName,(const char*)pFileName);
-		}
-*/
-	}
-}
-//构造
-CJsonNodeExport::CJsonNodeExport()
-{
-	m_nJsonNodeCount = 0;
-	m_pJsonNodeArray = NULL;
-	m_nFillIndex = 0;
-}
-//析构
-CJsonNodeExport::~CJsonNodeExport()
-{
-	stExpJsonNode* pJsonNodeArray = (stExpJsonNode* )m_pJsonNodeArray;
-	if(pJsonNodeArray)
-	{
-		delete[] pJsonNodeArray;
-		pJsonNodeArray = NULL;
-	}
-}
-//创建
-bool	CJsonNodeExport::CreateMemory(int vCount)
-{
-	stExpJsonNode* pJsonNodeArray = (stExpJsonNode* )m_pJsonNodeArray;
-	if(pJsonNodeArray)
-	{
-		delete[] pJsonNodeArray;
-		pJsonNodeArray = NULL;
-	}
-	m_nJsonNodeCount = vCount ;
-	pJsonNodeArray= new stExpJsonNode[vCount];
-	m_nFillIndex = 0;
-	if(!pJsonNodeArray)return false;
-	m_pJsonNodeArray = (uint64_t)pJsonNodeArray;
-	return true;
-}
-//清空
-void	CJsonNodeExport::ResetFill()
-{
-	m_nFillIndex = 0;
-}
-//填充根结点
-int		CJsonNodeExport::FillRootDate(JsonLoader*		pJson,stJsonNode*	pJsonNode,uint64_t& vStringDataAddr,bool bCopyData)
-{
-	stExpJsonNode* pJsonNodeArray = (stExpJsonNode* )m_pJsonNodeArray;
-	if(bCopyData)
-	{
-		//pJsonNodeArray[0].m_Type			= pJsonNode->m_Type;
-		pJsonNodeArray[0].m_ObjIndex		= pJsonNode->m_ObjIndex;
-		pJsonNodeArray[0].m_AttribIndex		= pJsonNode->m_AttribIndex;
-		//m_pJsonNodeArray[0].m_szName		= (char*)vStringDataAddr;
-		//vStringDataAddr += pJsonNode->m_Name.size() + 1;
-		pJsonNodeArray[0].m_ChildNum		= pJsonNode->m_ChildVec.size();
-		pJsonNodeArray[0].m_ChildArray		= pJsonNode->m_lChildMemAddr;
-
-		if(pJsonNode->m_ObjIndex >=0)
-		{
-
-			if(pJsonNodeArray[0].m_AttribIndex >= 0)
-			{
-				pJsonNodeArray[0].m_szValue = vStringDataAddr;
-				vStringDataAddr += pJsonNode->m_Value.size() + 1;
-			}
-			else
-			{
-				stJsonObjectDesc	tObjectDesc = pJson->GetObjectDesc(pJsonNode->m_ObjIndex);
-				if(0 == strcmp(pJsonNode->m_Name.c_str(),tObjectDesc.m_Name.c_str()))
-				{
-					pJsonNodeArray[0].m_szValue = vStringDataAddr;
-					vStringDataAddr += pJsonNode->m_Value.size() + 1;
-				}
-				else
-				{
-					pJsonNodeArray[0].m_szValue = vStringDataAddr;
-					vStringDataAddr += pJsonNode->m_Name.size() + 1;
-				}
-			}
-		}
-		else
-		{
-
-			if(pJsonNodeArray[0].m_AttribIndex >= 0)
-			{
-				//如果是普通数组元素，用子结点数量表示类型,用子结点数组地址表示名称
-				pJsonNodeArray[0].m_ChildNum = pJsonNode->m_Type;
-				pJsonNodeArray[0].m_ChildArray = vStringDataAddr;
-				vStringDataAddr += pJsonNode->m_Name.size() + 1;
-				pJsonNodeArray[0].m_szValue = vStringDataAddr;
-				vStringDataAddr += pJsonNode->m_Value.size() + 1;
-			}
-			else
-			{
-				//如果是数组，用Value存名称
-
-				pJsonNodeArray[0].m_szValue = vStringDataAddr;
-				vStringDataAddr += pJsonNode->m_Name.size() + 1;
-			}
-
-		}
-
-	}
-	else
-	{
-		pJsonNode->m_lChildMemAddr = sizeof(stExpJsonNode);
-	}
-
-	m_nFillIndex ++ ;
-	return m_nFillIndex ;
-}
-//填充
-int		CJsonNodeExport::FillDate(JsonLoader*		pJson,stJsonNode*	pJsonNode,uint64_t& vStringDataAddr,bool bCopyData)
-{
-	int		nChildCount = pJsonNode->m_ChildVec.size() ;
-
-	if(bCopyData)
-	{
-		stExpJsonNode* pJsonNodeArray = (stExpJsonNode* )m_pJsonNodeArray;
-
-		int nDestIndex = 0;
-		for(int i = 0 ; i < nChildCount ; i++)
-		{
-			nDestIndex = m_nFillIndex + i;
-			//pJsonNodeArray[nDestIndex].m_Type = pJsonNode->m_ChildVec[i].m_Type;
-			pJsonNodeArray[nDestIndex].m_ObjIndex = pJsonNode->m_ChildVec[i].m_ObjIndex;
-			pJsonNodeArray[nDestIndex].m_AttribIndex = pJsonNode->m_ChildVec[i].m_AttribIndex;
-			//pJsonNodeArray[nDestIndex].m_szName = (char*)vStringDataAddr;
-			//vStringDataAddr += pJsonNode->m_ChildVec[i].m_Name.size() + 1;
-			pJsonNodeArray[nDestIndex].m_ChildNum = pJsonNode->m_ChildVec[i].m_ChildVec.size();
-			pJsonNodeArray[nDestIndex].m_ChildArray = pJsonNode->m_ChildVec[i].m_lChildMemAddr;
-
-			if(pJsonNodeArray[nDestIndex].m_ObjIndex >= 0)
-			{
-				if(pJsonNodeArray[nDestIndex].m_AttribIndex >= 0)
-				{
-					pJsonNodeArray[nDestIndex].m_szValue = vStringDataAddr;
-					vStringDataAddr += pJsonNode->m_ChildVec[i].m_Value.size() + 1;
-				}
-				else
-				{
-					stJsonObjectDesc	tObjectDesc = pJson->GetObjectDesc(pJsonNodeArray[nDestIndex].m_ObjIndex);
-					if(0 == strcmp(pJsonNode->m_ChildVec[i].m_Name.c_str(),tObjectDesc.m_Name.c_str()))
-					{
-						pJsonNodeArray[nDestIndex].m_szValue = vStringDataAddr;
-						vStringDataAddr += pJsonNode->m_ChildVec[i].m_Value.size() + 1;
-					}
-					else
-					{
-						pJsonNodeArray[nDestIndex].m_szValue = vStringDataAddr;
-						vStringDataAddr += pJsonNode->m_ChildVec[i].m_Name.size() + 1;
-					}
-				}
-
-			}
-			else
-			{
-				if(pJsonNodeArray[nDestIndex].m_AttribIndex >= 0)
-				{
-					//如果是普通数组元素，用子结点数量表示类型,用子结点数组地址表示名称
-					pJsonNodeArray[nDestIndex].m_ChildNum = pJsonNode->m_ChildVec[i].m_Type;
-					pJsonNodeArray[nDestIndex].m_ChildArray = vStringDataAddr;
-					vStringDataAddr += pJsonNode->m_ChildVec[i].m_Name.size() + 1;
-					pJsonNodeArray[nDestIndex].m_szValue = vStringDataAddr;
-					vStringDataAddr += pJsonNode->m_ChildVec[i].m_Value.size() + 1;
-
-				}
-				else
-				{
-					//如果是数组，用Value存名称
-					pJsonNodeArray[nDestIndex].m_szValue = vStringDataAddr;
-					vStringDataAddr += pJsonNode->m_ChildVec[i].m_Name.size() + 1;
-				}
-			}
-
-		}
-	}
-	else
-	{
-		pJsonNode->m_lChildMemAddr = m_nFillIndex * sizeof(stExpJsonNode);
-	}
-
-	m_nFillIndex += nChildCount ;
-	return m_nFillIndex ;
-}
-
-//取得内存
-stExpJsonNode*		CJsonNodeExport::GetMemory()
-{
-	return (stExpJsonNode*)m_pJsonNodeArray ;
-}
 //构造
 JsonLoader::JsonLoader()
 {
-	m_pRootNode_Fast = NULL;
-	m_pObjectDescArray_Fast = NULL;
+	m_strVersion = "";
 }
 //析构
 JsonLoader::~JsonLoader()
@@ -2332,6 +1106,10 @@ bool	JsonLoader::ReadCocoJsonBuff(const char* pJsonBuff)
 		if(itr->value.IsString())
 		{
 			string	strText = itr->value.GetString() ;
+			if(0 == strcmp(strName.c_str(),"version"))
+			{
+				m_strVersion = strText;
+			}
 			AddJsonNode(kStringType,strName,strText,m_RootNode);
 			continue ;
 		}
@@ -2354,212 +1132,7 @@ void	JsonLoader::PrintAllJsonNode()
 {
 	m_RootNode.Print();
 }	
-//写入二进制文件
-bool	JsonLoader::WriteCocoBinBuff(const char* pBinFileName,stJsonNode&	vNewJsonNode)
-{
 
-	FILE* hFile = fopen(pBinFileName,"wb");
-	if(hFile)
-	{
-		//头信息
-		stCocoFileHeader	tCocoFileHeader;
-		strcpy(tCocoFileHeader.m_FileDesc,"Cocostudio-UI");
-		strcpy(tCocoFileHeader.m_Version,"V1.0.1");
-		tCocoFileHeader.m_ObjectCount = 0;
-		//遍历类
-		vector<stJsonObjectDesc>::iterator tIter;
-		for(tIter = m_ObjectDescVec.begin();tIter != m_ObjectDescVec.end(); tIter++)
-		{
-			if(tIter->m_HasNode)
-			{
-				tCocoFileHeader.m_ObjectCount++;
-			}
-		}
-		fwrite(&tCocoFileHeader,sizeof(stCocoFileHeader),1,hFile);
-		//遍历类
-		for(tIter = m_ObjectDescVec.begin();tIter != m_ObjectDescVec.end(); tIter++)
-		{
-			if(tIter->m_HasNode)
-			{
-				tIter->WriteToFile(hFile);
-			}
-		}
-
-		vNewJsonNode.WriteToFile(this,hFile);
-		fclose(hFile);
-	}
-	return true;
-
-}
-//从二进制文件中读取
-bool	JsonLoader::ReadCocoBinBuff(char* pBinBuff)
-{
-	//Type
-	char*	pTempBuff = pBinBuff;
-
-	//头信息
-	stCocoFileHeader	tCocoFileHeader;
-
-	memcpy(tCocoFileHeader.m_FileDesc,pTempBuff,sizeof(tCocoFileHeader.m_FileDesc));
-	pTempBuff += sizeof(tCocoFileHeader.m_FileDesc);
-
-	memcpy(tCocoFileHeader.m_Version,pTempBuff,sizeof(tCocoFileHeader.m_Version));
-	pTempBuff += sizeof(tCocoFileHeader.m_Version);
-
-	memcpy(&tCocoFileHeader.m_ObjectCount,pTempBuff,sizeof(tCocoFileHeader.m_ObjectCount));
-	pTempBuff += sizeof(tCocoFileHeader.m_ObjectCount);
-
-	//遍历类
-	for(int i = 0 ; i < tCocoFileHeader.m_ObjectCount ; i++)
-	{
-		stJsonObjectDesc	tJsonObjDesc;
-		pTempBuff = tJsonObjDesc.ReadFromBuff(pTempBuff);
-		m_ObjectDescVec.push_back(tJsonObjDesc);
-	}
-
-	if(false == m_ObjectDescVec.empty())
-	{
-		m_RootNode.ReadFromBuff(this,pTempBuff,false,&m_ObjectDescVec[0],-1);
-	}
-
-	return true;
-}
-//写入二进制文件
-bool	JsonLoader::WriteCocoBinBuff_Fast(const char* pBinFileName,stJsonNode&	vNewJsonNode)
-{
-
-	FILE* hFile = fopen(pBinFileName,"wb");
-	if(hFile)
-	{
-		//头信息
-		stCocoFileHeader_Fast	tCocoFileHeader;
-		tCocoFileHeader.m_nFirstUsed = 1;
-		strcpy(tCocoFileHeader.m_FileDesc,"Cocostudio-UI");
-		strcpy(tCocoFileHeader.m_Version,"V1.0.1");
-		tCocoFileHeader.m_ObjectCount    = 0;
-		tCocoFileHeader.m_lAttribMemAddr = 0;
-		tCocoFileHeader.m_JsonNodeMemAddr= 0;
-		tCocoFileHeader.m_lStringMemAddr = 0;
-		
-		//遍历类
-		vector<stJsonObjectDesc>::iterator tIter;
-		for(tIter = m_ObjectDescVec.begin();tIter != m_ObjectDescVec.end(); tIter++)
-		{
-			if(tIter->m_HasNode)
-			{
-				tCocoFileHeader.m_ObjectCount++;
-			}
-		}
-		fwrite(&tCocoFileHeader,sizeof(stCocoFileHeader_Fast),1,hFile);
-
-		//
-		uint64_t lDescSize	= 0;
-		uint64_t lAttribSize	= 0;
-		uint64_t lStringSize	= 0;
-		//遍历类,导出统一结构体
-		for(tIter = m_ObjectDescVec.begin();tIter != m_ObjectDescVec.end(); tIter++)
-		{
-			if(tIter->m_HasNode)
-			{
-				tIter->WriteToFile_Desc(hFile,lDescSize,lAttribSize,lStringSize);
-			}
-		}
-
-		tCocoFileHeader.m_lAttribMemAddr = lDescSize;
-		for(tIter = m_ObjectDescVec.begin();tIter != m_ObjectDescVec.end(); tIter++)
-		{
-			if(tIter->m_HasNode)
-			{
-				tIter->WriteToFile_Attrib(hFile,lDescSize,lStringSize);
-			}
-		}
-		tCocoFileHeader.m_JsonNodeMemAddr = lDescSize;
-
-		vector<stJsonNode*>  tAllChildVec;
-
-		stJsonNode	tRootJsonNode;
-		tRootJsonNode.m_ChildVec.push_back(vNewJsonNode);
-		int		nChildCount = tRootJsonNode.GetAllJsonNodes(tAllChildVec);
-
-		CJsonNodeExport	tJsonNodeExport;
-		tJsonNodeExport.CreateMemory(nChildCount);
-		vector<stJsonNode*>::iterator tChildIter;
-
-		tJsonNodeExport.FillRootDate(this,&vNewJsonNode,lStringSize,false);
-		for(tChildIter = tAllChildVec.begin();tChildIter != tAllChildVec.end(); tChildIter++)
-		{
-			tJsonNodeExport.FillDate(this,(*tChildIter),lStringSize,false);
-		}
-
-		tJsonNodeExport.ResetFill();
-		tJsonNodeExport.FillRootDate(this,&vNewJsonNode,lStringSize,true);
-		for(tChildIter = tAllChildVec.begin();tChildIter != tAllChildVec.end(); tChildIter++)
-		{
-			tJsonNodeExport.FillDate(this,(*tChildIter),lStringSize,true);
-		}
-	
-		stExpJsonNode*	tpExpJsonNodeMemory = tJsonNodeExport.GetMemory();
-
-		fwrite(tpExpJsonNodeMemory,sizeof(stExpJsonNode),nChildCount,hFile);
-	
-		tCocoFileHeader.m_lStringMemAddr = tCocoFileHeader.m_JsonNodeMemAddr + sizeof(stExpJsonNode) * nChildCount;
-		//遍历类，导出字符串
-		for(tIter = m_ObjectDescVec.begin();tIter != m_ObjectDescVec.end(); tIter++)
-		{
-			if(tIter->m_HasNode)
-			{
-				tIter->WriteToFile_String(hFile);
-			}
-		}
-		//遍历类，导出字符串
-		for(tIter = m_ObjectDescVec.begin();tIter != m_ObjectDescVec.end(); tIter++)
-		{
-			if(tIter->m_HasNode)
-			{
-				tIter->WriteToFile_AttribString(hFile);
-			}
-		}
-		vNewJsonNode.WriteToFile_String(this,hFile);
-		for(tChildIter = tAllChildVec.begin();tChildIter != tAllChildVec.end(); tChildIter++)
-		{
-			(*tChildIter)->WriteChildToFile_String(this,hFile);
-		}
-
-		//重写一下
-		fseek(hFile,0,SEEK_SET);
-		fwrite(&tCocoFileHeader,sizeof(stCocoFileHeader_Fast),1,hFile);
-		fclose(hFile);
-	}
-	return true;
-
-}
-//从二进制文件中读取
-bool	JsonLoader::ReadCocoBinBuff_Fast(char* pBinBuff)
-{
-	//Type
-	char*	pTempBuff = pBinBuff;
-
-	//头信息
-	m_pFileHeader = (stCocoFileHeader_Fast*)pTempBuff;
-	pTempBuff += sizeof(stCocoFileHeader_Fast);
-
-	//遍历类
-	char*   pStartAddr = pTempBuff;
-	m_pObjectDescArray_Fast = (stExpJsonObjectDesc*)pStartAddr;
-
-	char*   pAttrAddr = pStartAddr + m_pFileHeader->m_lAttribMemAddr ;
-	char*	pJsonMemAddr = pStartAddr + m_pFileHeader->m_JsonNodeMemAddr;
-	char*   pStringAddr = pStartAddr + m_pFileHeader->m_lStringMemAddr ;
-
-	for(int i = 0 ; i < m_pFileHeader->m_ObjectCount ; i++)
-	{
-		m_pObjectDescArray_Fast[i].ReBuild(pAttrAddr,pStringAddr)	;
-	}
-
-	m_pRootNode_Fast = (stExpJsonNode*)pJsonMemAddr;
-	m_pRootNode_Fast->ReBuild(pJsonMemAddr,pStringAddr);
-	return true;
-}
 //取得根结点
 stJsonNode&	JsonLoader::GetRootJsonNode()
 {
@@ -2798,12 +1371,15 @@ void	JsonLoader::AddObjectDesc(string strName,const rapidjson::Value &	vValue)
 	vector<stJsonObjectDesc>::iterator tIter;
 	for(tIter = m_ObjectDescVec.begin() ; tIter != m_ObjectDescVec.end() ;  tIter++)
 	{
-		if(0 == strcmp(tIter->m_Name.c_str(),strName.c_str()))
+		vector<string>::iterator tIter2;
+		for(tIter2 = tIter->m_NameVec.begin() ; tIter2 != tIter->m_NameVec.end() ;  tIter2++)
 		{
+			if(0 == strcmp(tIter2->c_str(),strName.c_str()))
+			{
 
-			unsigned int nSize = vValue.MemberonEnd() - vValue.MemberonBegin();
-			unsigned int nAttribSize = tIter->m_AttribVec.size();
-			
+				unsigned int nSize = vValue.MemberonEnd() - vValue.MemberonBegin();
+				unsigned int nAttribSize = tIter->m_AttribVec.size();
+
 				for (rapidjson::Value::ConstMemberIterator itr = vValue.MemberonBegin(); itr != vValue.MemberonEnd(); ++itr)
 				{
 					const char*	szAttribName  = itr->name.GetString();
@@ -2848,9 +1424,10 @@ void	JsonLoader::AddObjectDesc(string strName,const rapidjson::Value &	vValue)
 						}
 					}
 				}	
-		
-			return ;
 
+				return ;
+
+			}
 		}
 	}
 
@@ -2862,31 +1439,38 @@ void	JsonLoader::AddObjectDesc(string strName,const rapidjson::Value &	vValue)
 		strcpy(szMemory,pChar);
 		char*   szFindStr = szMemory ;
 		szFindStr = strtok(szFindStr,",");
+
+		stJsonObjectDesc	tNewObject;
 		while(szFindStr)
 		{
-			stJsonObjectDesc	tNewObject;
-			tNewObject.m_Name  = szFindStr ;
-			for (rapidjson::Value::ConstMemberIterator itr = vValue.MemberonBegin(); itr != vValue.MemberonEnd(); ++itr)
-			{
-				const char*	szAttribName  = itr->name.GetString();
-				/*
-				if(0 == strcmp(szAttribName,"children"))
-				{
-					continue ;
-				}
-				*/
-				string	strAttribName = szAttribName;
-				stJsonAttribDesc	tJsonAttrib;
-				tJsonAttrib.m_Name = strAttribName ;
-				tJsonAttrib.m_Type = itr->value.GetType();
-				tJsonAttrib.m_DefaultValue = GetValueString(itr->value);
-				tNewObject.m_AttribVec.push_back(tJsonAttrib);
-			}
-			m_ObjectDescVec.push_back(tNewObject);
+			string strTempName = szFindStr ;
+			tNewObject.m_NameVec.push_back(strTempName);
 
+			if(tNewObject.m_AttribVec.empty())
+			{
+				for (rapidjson::Value::ConstMemberIterator itr = vValue.MemberonBegin(); itr != vValue.MemberonEnd(); ++itr)
+				{
+					const char*	szAttribName  = itr->name.GetString();
+					/*
+					if(0 == strcmp(szAttribName,"children"))
+					{
+					continue ;
+					}
+					*/
+					string	strAttribName = szAttribName;
+					stJsonAttribDesc	tJsonAttrib;
+					tJsonAttrib.m_Name = strAttribName ;
+					tJsonAttrib.m_Type = itr->value.GetType();
+					tJsonAttrib.m_DefaultValue = GetValueString(itr->value);
+					tNewObject.m_AttribVec.push_back(tJsonAttrib);
+				}
+			}
+			
+			
 			szFindStr = strtok(NULL,",");
 			if(!szFindStr)break;
 		}
+		m_ObjectDescVec.push_back(tNewObject);
 		delete[] szMemory;
 	}
 
@@ -2907,11 +1491,15 @@ int		JsonLoader::GetObjectDescIndex(string& strName)
 		vector<stJsonObjectDesc>::iterator tIter;
 		for(tIter = m_ObjectDescVec.begin() ; tIter != m_ObjectDescVec.end() ;  tIter++)
 		{
-			if(0 == strcmp(tIter->m_Name.c_str(),szFindStr))
+			vector<string>::iterator tIter2;
+			for(tIter2 = tIter->m_NameVec.begin() ; tIter2 != tIter->m_NameVec.end() ;  tIter2++)
 			{
-				strName = szFindStr;
-				delete[] szMemory;
-				return int(tIter - m_ObjectDescVec.begin());
+				if(0 == strcmp(tIter2->c_str(),szFindStr))
+				{
+					strName = szFindStr;
+					delete[] szMemory;
+					return int(tIter - m_ObjectDescVec.begin());
+				}
 			}
 		}
 
