@@ -99,7 +99,7 @@ int     GetObjectIndex(JsonLoader*	pLoader,vector<stJsonNode>& vChildVec)
 	return -1;
 }
 //比较类型描述
-bool	stJsonAttribDesc::CompareAttribDesc(string& strName,bool bFastCompare)
+bool	stJsonAttribDesc::CompareAttribDesc(string& strName,string& strOutName)
 {
 	//=====================================================
 	vector<string> m_strVec2;
@@ -119,54 +119,39 @@ bool	stJsonAttribDesc::CompareAttribDesc(string& strName,bool bFastCompare)
 	}
 	delete[] szMemory2;
 
-	if(bFastCompare)
+	//=====================================================
+	vector<string> m_strVec1;
+	const	char*	pChar = strName.c_str();
+	int		nLen = strName.size();
+	char*   szMemory = new char[nLen+1];
+	strcpy(szMemory,pChar);
+	char*   szFindStr = szMemory ;
+	szFindStr = strtok(szMemory,",");
+	while(szFindStr)
 	{
-		//=====================================================
+		string str = szFindStr ;
+		m_strVec1.push_back(str);
+
+		szFindStr = strtok(NULL,",");
+		if(!szFindStr)break;
+	}
+	delete[] szMemory;
+
+	//=====================================================
+	vector<string>::iterator tIter;
+	for(tIter = m_strVec1.begin(); tIter != m_strVec1.end(); tIter++)
+	{
 		vector<string>::iterator tIter2;
 		for(tIter2 = m_strVec2.begin(); tIter2 != m_strVec2.end(); tIter2++)
 		{
-			if( 0 == strcmp(strName.c_str(),tIter2->c_str()) )
+			if( 0 == strcmp(tIter2->c_str(),tIter->c_str()) )
 			{
+				strOutName = m_strVec2.front();
 				return true;
 			}
-
 		}
 	}
-	else
-	{
-		//=====================================================
-		vector<string> m_strVec1;
-		const	char*	pChar = strName.c_str();
-		int		nLen = strName.size();
-		char*   szMemory = new char[nLen+1];
-		strcpy(szMemory,pChar);
-		char*   szFindStr = szMemory ;
-		szFindStr = strtok(szMemory,",");
-		while(szFindStr)
-		{
-			string str = szFindStr ;
-			m_strVec1.push_back(str);
 
-			szFindStr = strtok(NULL,",");
-			if(!szFindStr)break;
-		}
-		delete[] szMemory;
-
-		//=====================================================
-		vector<string>::iterator tIter;
-		for(tIter = m_strVec1.begin(); tIter != m_strVec1.end(); tIter++)
-		{
-			vector<string>::iterator tIter2;
-			for(tIter2 = m_strVec2.begin(); tIter2 != m_strVec2.end(); tIter2++)
-			{
-				if( 0 == strcmp(tIter2->c_str(),tIter->c_str()) )
-				{
-					return true;
-				}
-			}
-		}
-	}
-	
 	return false;
 }
 
@@ -214,9 +199,8 @@ int		stJsonObjectDesc::FindAttribDesc(string& strName,int& nNameIndex)
 	{
 		for(tIter = m_AttribVec.begin();tIter != m_AttribVec.end(); tIter++)
 		{
-			if( tIter->CompareAttribDesc(*tStrIter) )
+			if( tIter->CompareAttribDesc(*tStrIter,strName) )
 			{
-				strName = *tStrIter;
 				return (tIter - m_AttribVec.begin());
 			}
 		}
@@ -664,7 +648,40 @@ stJsonNode	stJsonNode::GetGoodJsonNode(JsonLoader*		pJson,bool bIsRoot,const cha
 								tNewChildJsonNode.m_Value  = vObjectDesc.m_NameVec[nNameIndex];
 							}
 						}
-
+						if(0 == strcmp(tIter->m_Name.c_str(),"version"))
+						{
+							
+							if(kStringType == tIter->m_Type)
+							{
+								tNewChildJsonNode.m_Value = pJson->GetVersion();
+							}
+							else
+							{	
+								FLOAT fVersion = pJson->GetAniFloatVersion();
+								char  szFloatVersion[10];
+								if(int(fVersion) == fVersion)
+								{
+									sprintf(szFloatVersion,"%.2f",fVersion);
+									tNewChildJsonNode.m_Value = szFloatVersion;
+								}
+								else
+								{
+									sprintf(szFloatVersion,"%.4f",fVersion);
+									tNewChildJsonNode.m_Value = szFloatVersion;
+								}
+							}
+						}
+						else
+						{
+							if(0 == strcmp(tIter->m_Name.c_str(),"strVersion"))
+							{
+								tNewChildJsonNode.m_Value = pJson->GetAniVersion();
+							}
+							else
+							{
+								tNewChildJsonNode.m_Value = tIter->m_Value;
+							}
+						}
 						tNewChildJsonNode.m_ObjIndex = tNewJsonNode.m_ObjIndex;
 						tNewChildJsonNode.m_AttribIndex = nIndex;
 						tNewJsonNode.m_ChildVec.push_back(tNewChildJsonNode);
@@ -729,7 +746,8 @@ stJsonNode	stJsonNode::GetGoodJsonNode(JsonLoader*		pJson,bool bIsRoot,const cha
 				vector<stJsonNode>::iterator tIter3;
 				for(tIter3 = m_ChildVec.begin(); tIter3 != m_ChildVec.end(); tIter3++)
 				{
-					if(0 == strcmp(tIter3->m_Name.c_str(),tIter2->m_Name.c_str()))
+					string strOutName ;
+					if(tIter2->CompareAttribDesc(tIter3->m_Name,strOutName))
 					{
 						bFind = true;
 						break;
@@ -849,7 +867,14 @@ stJsonNode	stJsonNode::GetGoodJsonNode(JsonLoader*		pJson,bool bIsRoot,const cha
 					}
 					else
 					{
-						tNewChildJsonNode.m_Value = tIter->m_Value;
+						if(0 == strcmp(tIter->m_Name.c_str(),"strVersion"))
+						{
+							tNewChildJsonNode.m_Value = pJson->GetAniVersion();
+						}
+						else
+						{
+							tNewChildJsonNode.m_Value = tIter->m_Value;
+						}
 					}
 
 
@@ -916,7 +941,8 @@ stJsonNode	stJsonNode::GetGoodJsonNode(JsonLoader*		pJson,bool bIsRoot,const cha
 			vector<stJsonNode>::iterator tIter3;
 			for(tIter3 = m_ChildVec.begin(); tIter3 != m_ChildVec.end(); tIter3++)
 			{
-				if(0 == strcmp(tIter3->m_Name.c_str(),tIter2->m_Name.c_str()))
+				string strOutName ;
+				if(tIter2->CompareAttribDesc(tIter3->m_Name,strOutName))
 				{
 					bFind = true;
 					break;
@@ -988,6 +1014,8 @@ int		stJsonNode::GetAllJsonNodes(vector<stJsonNode*>&  vAllChildVec)
 JsonLoader::JsonLoader()
 {
 	m_strVersion = "";
+	m_AniVersion = "";
+	m_fAniVersion = - 1.0f;
 }
 //析构
 JsonLoader::~JsonLoader()
@@ -1001,9 +1029,7 @@ bool	JsonLoader::ReadCocoJsonBuff(const char* pJsonBuff)
 	std::string clearData(pJsonBuff);
 	size_t pos = clearData.rfind("}");
 	clearData = clearData.substr(0, pos+1);
-
-	rapidjson::Document jsonDict;
-
+	jsonDict.Clear();
 	jsonDict.Parse<0>(clearData.c_str());
 	if(jsonDict.HasParseError())
 	{
@@ -1109,6 +1135,10 @@ bool	JsonLoader::ReadCocoJsonBuff(const char* pJsonBuff)
 			if(0 == strcmp(strName.c_str(),"version"))
 			{
 				m_strVersion = strText;
+			}
+			if(0 == strcmp(strName.c_str(),"strVersion"))
+			{
+				m_AniVersion = strText;
 			}
 			AddJsonNode(kStringType,strName,strText,m_RootNode);
 			continue ;
@@ -1322,7 +1352,13 @@ stJsonNode&		JsonLoader::AddJsonNode_Object(const rapidjson::Value &	vValue,stJs
 			{
 				char  szText[100];
 				sprintf(szText,"%.4f",itr->value.GetDouble());
-				string	strText = szText ;
+
+				if(0 == strcmp(strName.c_str(),"version"))
+				{
+					m_fAniVersion = atof(szText);
+				}
+
+				string	strText = szText ;		
 				AddJsonNode(kNumberType,strName,strText,vParentNode);
 				continue ;
 			}
@@ -1351,7 +1387,10 @@ stJsonNode&		JsonLoader::AddJsonNode_Object(const rapidjson::Value &	vValue,stJs
 					bHasObjectDesc = true;
 				}
 			}
-
+			if(0 == strcmp(strName.c_str(),"strVersion"))
+			{
+				m_AniVersion = strText;
+			}
 			continue ;
 		}
 	}
@@ -1496,7 +1535,7 @@ int		JsonLoader::GetObjectDescIndex(string& strName)
 			{
 				if(0 == strcmp(tIter2->c_str(),szFindStr))
 				{
-					strName = szFindStr;
+					strName = tIter->m_NameVec.front();
 					delete[] szMemory;
 					return int(tIter - m_ObjectDescVec.begin());
 				}

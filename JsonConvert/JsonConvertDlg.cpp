@@ -260,8 +260,13 @@ void CJsonConvertDlg::OnBnClickedOk()
 			DWORD dwStartTime = ::GetTickCount();
 			//初始化，按旧的读取规格
 
-			tCocoLoader_Old.ReadCocoJsonBuff(pBinBuff);
-
+			if(false == tCocoLoader_Old.ReadCocoJsonBuff(pBinBuff))
+			{
+				delete[] pBinBuff ;
+				pBinBuff = NULL   ;
+				MessageBox("Load Template File Failed!","Error",MB_OK);
+				return ;
+			}
 
 			//delete[] pBinBuff ;
 			//pBinBuff = NULL   ;
@@ -295,7 +300,13 @@ void CJsonConvertDlg::OnBnClickedOk()
 
 			DWORD dwStartTime = ::GetTickCount();
 			//初始化，按旧的读取规格
-			tCocoLoader_New.ReadCocoJsonBuff(pBinBuff);
+			if(false == tCocoLoader_New.ReadCocoJsonBuff(pBinBuff))
+			{
+				delete[] pBinBuff ;
+				pBinBuff = NULL   ;
+				MessageBox("Load Source Json File Failed!","Error",MB_OK);
+				return ;
+			}
 
 			delete[] pBinBuff ;
 			pBinBuff = NULL   ;
@@ -308,7 +319,6 @@ void CJsonConvertDlg::OnBnClickedOk()
 	stJsonNode	tJsonNode_Old = tCocoLoader_Old.GetRootJsonNode();
 	//取得JSON结点
 	stJsonNode	tJsonNode_New = tCocoLoader_New.GetRootJsonNode();
-
 	//测试
 	stJsonNode	tGoodJsonNode = tJsonNode_New.GetGoodJsonNode(&tCocoLoader_Old);
 

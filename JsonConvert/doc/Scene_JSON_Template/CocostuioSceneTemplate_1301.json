@@ -1,0 +1,236 @@
+{
+  "classname": "CCNode",
+  "name": null,
+  "canedit": true,
+  "objecttag": 10000,
+  "rotation": 0,
+  "scalex": 1,
+  "scaley": 1,
+  "visible": 1,
+  "x": 0,
+  "y": 0,
+  "zorder": 1,
+  "gameobjects": [
+    {
+      "__type": "ComGameObjectSurrogate:#EditorCommon.JsonModel",
+      "classname": "CCNode",
+      "name": null,
+      "canedit": true,
+      "objecttag": 10003,
+      "rotation": 0,
+      "scalex": 1,
+      "scaley": 1,
+      "visible": 1,
+      "x": 0.111114501953125,
+      "y": 320.33331298828125,
+      "zorder": 1,
+      "gameobjects": [],
+      "components": [
+        {
+          "__type": "ComGUIAdapterSurrogate:#EditorCommon.JsonModel.Component",
+          "classname": "GUIComponent",
+          "name": "GUIComponent",
+          "file": null,
+          "fileData": {
+            "path": "1.0.2.0/1.0.0.0_1.json",
+            "plistFile": null,
+            "resourceType": 0
+          }
+        }
+      ]
+    },
+    {
+      "__type": "ComGameObjectSurrogate:#EditorCommon.JsonModel",
+      "classname": "CCNode",
+      "name": null,
+      "canedit": true,
+      "objecttag": 10004,
+      "rotation": 0,
+      "scalex": 1,
+      "scaley": 1,
+      "visible": 1,
+      "x": 480.5555419921875,
+      "y": 319.11111450195312,
+      "zorder": 1,
+      "gameobjects": [],
+      "components": [
+        {
+          "__type": "ComGUIAdapterSurrogate:#EditorCommon.JsonModel.Component",
+          "classname": "GUIComponent",
+          "name": "GUIComponent",
+          "file": null,
+          "fileData": {
+            "path": "1.0.2.0/1.0.0.0_2.json",
+            "plistFile": null,
+            "resourceType": 0
+          }
+        }
+      ]
+    },
+    {
+      "__type": "ComGameObjectSurrogate:#EditorCommon.JsonModel",
+      "classname": "CCNode",
+      "name": null,
+      "canedit": true,
+      "objecttag": 10005,
+      "rotation": 0,
+      "scalex": 0.5,
+      "scaley": 0.5,
+      "visible": 1,
+      "x": 714,
+      "y": 187,
+      "zorder": 1,
+      "gameobjects": [],
+      "components": [
+        {
+          "__type": "ComArmatureAdapterSurrogate:#EditorCommon.JsonModel.Component",
+          "classname": "CCArmature",
+          "name": "CCArmature",
+          "file": null,
+          "fileData": {
+            "path": "Export/DemoPlayer.ExportJson",
+            "plistFile": null,
+            "resourceType": 0
+          },
+          "isShowColliderRect": false,
+          "selectedactionname": "stand"
+        }
+      ]
+    },
+    {
+      "__type": "ComGameObjectSurrogate:#EditorCommon.JsonModel",
+      "classname": "CCNode",
+      "name": null,
+      "canedit": true,
+      "objecttag": 10009,
+      "rotation": 0,
+      "scalex": 1,
+      "scaley": 1,
+      "visible": 1,
+      "x": -20.000823974609375,
+      "y": 4.3337020874023438,
+      "zorder": 1,
+      "gameobjects": [],
+      "components": [
+        {
+          "__type": "ComGameMapSurrogate:#EditorCommon.JsonModel.Component",
+          "classname": "CCTMXTiledMap",
+          "name": "CCTMXTiledMap",
+          "file": null,
+          "fileData": {
+            "path": "map/logo2.tmx",
+            "plistFile": null,
+            "resourceType": 0
+          }
+        }
+      ]
+    },
+    {
+      "__type": "ComGameObjectSurrogate:#EditorCommon.JsonModel",
+      "classname": "CCNode",
+      "name": null,
+      "canedit": true,
+      "objecttag": 10010,
+      "rotation": 0,
+      "scalex": 1,
+      "scaley": 1,
+      "visible": 1,
+      "x": 558,
+      "y": 78.9999771118164,
+      "zorder": 1,
+      "gameobjects": [],
+      "components": [
+        {
+          "__type": "ComParticleSystemSurrogate:#EditorCommon.JsonModel.Component",
+          "classname": "CCParticleSystemQuad",
+          "name": "CCParticleSystemQuad",
+          "file": null,
+          "fileData": {
+            "path": "particle/blue.plist",
+            "plistFile": null,
+            "resourceType": 0
+          }
+        }
+      ]
+    },
+    {
+      "__type": "ComGameObjectSurrogate:#EditorCommon.JsonModel",
+      "classname": "CCNode",
+      "name": null,
+      "canedit": true,
+      "objecttag": 10011,
+      "rotation": 0,
+      "scalex": 1,
+      "scaley": 1,
+      "visible": 1,
+      "x": 907,
+      "y": 115.99997711181641,
+      "zorder": 1,
+      "gameobjects": [],
+      "components": [
+        {
+          "__type": "ComSimpleAudioSurrogate:#EditorCommon.JsonModel.Component",
+          "classname": "CCComAudio",
+          "name": "CCComAudio",
+          "file": null,
+          "fileData": {
+            "path": "MP3/2.mp3",
+            "plistFile": null,
+            "resourceType": 0
+          },
+          "loop": 0
+        }
+      ]
+    },
+    {
+      "__type": "ComGameObjectSurrogate:#EditorCommon.JsonModel",
+      "classname": "CCNode",
+      "name": null,
+      "canedit": true,
+      "objecttag": 10012,
+      "rotation": 0,
+      "scalex": 1,
+      "scaley": 1,
+      "visible": 1,
+      "x": 888,
+      "y": 275.99996948242188,
+      "zorder": 1,
+      "gameobjects": [],
+      "components": [
+        {
+          "__type": "ComPropertySurrogate:#EditorCommon.JsonModel.Component",
+          "classname": "CCComAttribute",
+          "name": "CCComAttribute",
+          "fileData": null,
+          "keyvalues": null
+        }
+      ]
+    }
+  ],
+  "CanvasSize": {
+    "_height": 640,
+    "_width": 960
+  },
+  "Triggers": null,
+  "Version": "1.2.0.1",
+  "components": [
+    {
+      "__type": "ComSceneSurrogate:#EditorCommon.JsonModel.Component",
+      "classname": "CCScene",
+      "name": "CCScene",
+      "scenename": "1.3.0.0"
+    },
+    {
+      "__type": "ComSimpleAudioSurrogate:#EditorCommon.JsonModel.Component",
+      "classname": "CCBackgroundAudio",
+      "name": "CCBackgroundAudio",
+      "file": null,
+      "fileData": {
+        "path": null,
+        "plistFile": null,
+        "resourceType": 0
+      },
+      "loop": 0
+    }
+  ]
+}

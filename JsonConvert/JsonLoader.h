@@ -26,7 +26,7 @@ struct  stJsonAttribDesc
 	string				m_DefaultValue;
 public:
 	//比较类型描述
-	bool				CompareAttribDesc(string& strName,bool bFastCompare = true);
+	bool				CompareAttribDesc(string& strName,string& strOutName);
 	//取得结构所占用的大小
 	int					GetSize();
 };
@@ -70,6 +70,8 @@ public:
 //JsonLoader
 class JsonLoader
 {
+	//JSON文档
+	rapidjson::Document			jsonDict;
 	//根结点
 	stJsonNode					m_RootNode;
 	//类结点容器
@@ -77,7 +79,9 @@ class JsonLoader
 
 	//版本
 	string						m_strVersion;
-
+	//
+	string						m_AniVersion;
+	float						m_fAniVersion;
 public:
 	//构造
 	JsonLoader();
@@ -100,6 +104,11 @@ public:
 	int						GetUsedObjectDescIndex(int vIndex);
 	//取得版本
 	const string&			GetVersion(){return m_strVersion;}
+	//取得动画编辑器中额外的字符串版本
+	const string&			GetAniVersion(){return m_AniVersion;}
+	//取得动画编辑器中额外的字符串版本
+	const float				GetAniFloatVersion(){return m_fAniVersion;}
+
 private:
 	//增加一个结点
 	stJsonNode&				AddJsonNode(Type vType,string strName,string strValue,stJsonNode& vParentNode);
