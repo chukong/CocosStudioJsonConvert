@@ -14,10 +14,10 @@
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav</Extensions>
     </Filter>
     <Filter Include="JSON">
-      <UniqueIdentifier>{7438fb8e-df74-46c2-a77c-e6137978a601}</UniqueIdentifier>
+      <UniqueIdentifier>{091349f7-d857-4852-a63a-4d559a72c6d1}</UniqueIdentifier>
     </Filter>
     <Filter Include="rapidjosn">
-      <UniqueIdentifier>{321a0aaa-7a68-4f7d-8550-f2dc860878b9}</UniqueIdentifier>
+      <UniqueIdentifier>{02c2d919-8f02-47ef-9c9b-0669597c26f6}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
