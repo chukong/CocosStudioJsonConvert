@@ -4,7 +4,44 @@
   "animation": {
     "classname": null,
     "name": "AnimationManager",
-    "actionlist": []
+    "actionlist": [ {
+        "classname": null,
+        "name": "Animation0",
+        "actionnodelist":[
+        {
+          "classname": null,
+          "name": "Image_15",
+          "ActionTag": 47197519,
+          "actionframelist": [
+            {
+            "classname": null,
+            "name": null,
+            "colorb": 255,
+            "colorg": 255,
+            "colorr": 255,
+            "frameid": 0,
+            "opacity": 255,
+            "positionx": 120.238289,
+            "positiony": 21.2687511,
+            "rotation": 0,
+            "scalex": 1,
+            "scaley": 1,
+            "starttime": 0,
+            "tweenParameter": [ 
+            0,
+            0,
+            1,
+            1
+            ],
+            "tweenType": 0,
+            "visible": false
+            }
+          ]
+        }
+      ],
+        "loop": true,
+        "unittime": 0.1
+      }]
   },
   "dataScale": 1,
   "designHeight": 320,
